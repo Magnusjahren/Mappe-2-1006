@@ -1,0 +1,323 @@
+---
+title: "Mappeoppgave-2-SOK-1006"
+author: "11"
+warning: False
+message: False
+echo: False
+format: "pdf"
+---
+
+```{python}
+import numpy as np
+import sympy as sp
+from matplotlib import pyplot as plt
+import pandas as pd
+```
+
+Oppgave 1 
+
+ Bompengeavgift er en avgift som blir betalt av kjørende på en vei eller lignende. Avgiften brukes hovedsaklig til å finansiere veiprosjekter eller lignede prosjekter. Bompengene som ble innført 5 Januar i Tromsø skal brukes til bypakken tenk Tromsø. 
+
+ Oppgave 2 
+
+
+ ```{python}
+ df_bil = pd.read_csv("https://raw.githubusercontent.com/Magnusjahren/Mappe-2-1006/main/-1061778658_mdt_2022_2023.csv", delimiter=";", encoding="latin1")
+df_bil = pd.DataFrame(df_bil[["< 5,6m","Måned", "År", "Trafikkmengde", "Felt"]])
+df_bil =df_bil.rename(columns = {"< 5,6m": "Personbiler"})
+df_bil =df_bil[df_bil["Felt"]== "Totalt"]
+df_bil["Personbiler"] = pd.to_numeric(df_bil['Personbiler'], errors='coerce')
+df_bil22 = df_bil[df_bil['År'] == 2022]
+df_bil22 = df_bil22[df_bil22["Måned"].isin([1,2,3,4,5])]
+df_bil22 = df_bil22.groupby(df_bil22.Måned)['Personbiler'].sum()
+df_bil22 = df_bil22.reset_index()
+df_bil23 = df_bil[df_bil['År'] == 2023]
+df_bil23 = df_bil23.groupby(df_bil23.Måned)['Personbiler'].sum()
+df_bil23 = df_bil23.reset_index()
+
+
+ ```
+
+ 
+ ```{python}
+ fig, ax = plt.subplots()
+ax.bar(df_bil22["Måned"], df_bil22["Personbiler"], label = "Trafikk 2022")
+ax.bar(df_bil23["Måned"], df_bil23["Personbiler"], label = "Trafikk 2023")
+ax.set_xticks([1,2,3,4,5])
+ax.set_xticklabels(["Januar", "Februar", "Mars", "April", "Mai"])
+ax.set_xlabel("Måned")
+ax.set_ylabel("Trafikk")
+ax.set_title("Personbil trafikk 2022 og 2023")
+ax.legend(bbox_to_anchor=(1.5,0.6));
+ ```
+ Denne figuren viser personbil trafikken i Tromsø området Januar til Mai 2022 og 2023. Figuren er basert på 24 trafikkregistering punkter som også tar med Kvaløysletta og Tromsdalen. Figuren viser at personbil trafikken har falt siden implemteringen av bompengeavgift i Tromsø. 
+ 
+
+ ```{python}
+ df_t1 = df_bil[df_bil['År'] == 2022]
+df_t1 = df_t1[df_t1["Måned"].isin([1,2,3,4,5])]
+df_t1 = df_t1.groupby(df_t1.Måned)['Trafikkmengde'].sum()
+df_t1 = df_t1.reset_index()
+df_t2 = df_bil[df_bil['År'] == 2023]
+df_t2 = df_t2.groupby(df_t2.Måned)['Trafikkmengde'].sum()
+df_t2 = df_t2.reset_index()
+
+ ```
+
+
+ ```{python}
+ fig, ax = plt.subplots()
+ax.bar(df_t1["Måned"], df_t1["Trafikkmengde"], label = "Trafikk 2022")
+ax.bar(df_t2["Måned"], df_t2["Trafikkmengde"], label = "Trafikk 2023")
+ax.set_xticks([1,2,3,4,5])
+ax.set_xticklabels(["Januar", "Februar", "Mars", "April", "Mai"])
+ax.set_xlabel("Måned")
+ax.set_ylabel("Trafikk")
+ax.set_title("Total Trafikkmengde Tromsø område, 2022 og 2023")
+ax.legend(bbox_to_anchor=(1.5,0.6));
+ ```
+ Denne figuren viser total trafikkmengde som følger samme trend som personbil trafikken.
+
+
+ ```{python}
+ df_buss = pd.read_csv("https://raw.githubusercontent.com/uit-sok-1006-v23/uit-sok-1006-v23.github.io/main/data/antall%20p%C3%A5stigende.csv", parse_dates=['date'], dayfirst=True)
+df_buss = pd.DataFrame(df_buss[["Påstigende", "date"]])
+df_buss["date"]= pd.to_datetime(df_buss[ "date"])
+df_buss['Måned']=df_buss[ "date"].dt.month
+df_buss["date"]= pd.to_datetime(df_buss["date"])
+df_buss["År"]=df_buss["date"].dt.year
+df_buss = df_buss.groupby(["Måned", "År"])["Påstigende"].sum()
+df_buss = df_buss.reset_index()
+df_buss = df_buss.drop(df_buss.index[[8,9,10,11,12,13,14,15]]) 
+
+
+ ```
+
+
+ ```{python}
+ fig, ax = plt.subplots()
+ax.ticklabel_format(style='plain')
+ax.bar(df_buss["År"], df_buss["Påstigende"], label = "Påstigninger")
+ax.set_ylabel("Påstigninger")
+ax.set_title("Påstigninger buss i Tromsø (Januar-April)")
+ax.set_xticks([2022, 2023])
+ax.legend(bbox_to_anchor=(1,0.6));
+ ```
+ Her ser vi antall påstigninger på buss i Tromsø. Figuren viser data fra Januar til Mai i 2022 og 2023. Antall påstigninger har økt betraktelig, det kan være grunnet bompengeavgiften.
+
+ Oppgave 3 
+
+ I denne analysen har jeg valgt å bruke en stone geary funksjon for å analysere konsumentens tilpasning. Jeg har valgt stone geary fordi
+Da kan jeg sette en minimumskonsum slik at analysen blir mer nøyaktig. Jeg har valgt å bruke median inntekt i Tromsø kommune 48120(SSB) og brukt pris per km for elbiler(1.98) og fossilbiler(3.03). Jeg har hentet gjennomsnittlig månendlig bompengeavgift i Tromsø 350 kr (Nordlys). Minimumskostnaden er satt til 3000 kr. 
+
+```{python}
+el = 1.98
+driv = 3.03
+gjen_bom = 350  
+med_inn = 48120
+andre_g = 1
+km_k = 11097/12
+pris_m = driv*km_k
+beta1 = pris_m/med_inn
+beta2 = 1-beta1
+driv1 = gjen_bom/pris_m
+ny_driv = driv1+driv
+
+
+
+bta_1, bta_2, gma_1, gma_2 = sp.symbols('\u03B2_1 \u03B2_2 \gamma_1 \gamma_2', real=True, positive=True)
+x_1, x_2, p_1, p_2, m=sp.symbols("x_1 x_2 p_1 p_2 m", real=True, positive=True)
+
+x_1_eq = gma_1 + (bta_1/p_1)*(m-p_1*gma_1-p_2*gma_2)
+
+x_2_eq = gma_2 + (bta_2/p_2)*(m-p_1*gma_1-p_2*gma_2)
+```
+
+
+```{python}
+nytte_sg = bta_1*sp.log(x_1-gma_1) + (1-bta_1)*sp.log(x_2-gma_2)
+
+V = nytte_sg.subs([(x_1, x_1_eq), (x_2, x_2_eq)])
+
+U_0=sp.symbols('U_0', real = True, positive=True)
+
+ind_k = sp.solve(nytte_sg-U_0, x_2)[0]
+```
+
+
+```{python}
+def ind_k_fn(bta_1,gma_1,gma_2,x_1,U_0):
+    return gma_2 + np.exp((bta_1*np.log(x_1-gma_1)-U_0)/(bta_1-1))
+
+def budsjett(M, x_1, p_1, p_2):
+    return M/p_2 - (p_1*x_1/p_2)
+
+
+x_1_eq_num = float(x_1_eq.subs([(bta_1, beta1), (gma_1, 3000), (gma_2, med_inn/2), (m, 48120), (p_1, 3.03), (p_2, 1)]))
+x_2_eq_num = float(x_2_eq.subs([(bta_2, beta2), (gma_1, 3000), (gma_2, med_inn/2), (m, 48120), (p_1, 3.03), (p_2, 1)]))
+nytte_sg_num = float(V.subs([(bta_1, beta1),(bta_2, beta2), (gma_1, 3000), (gma_2, med_inn/2), (m, 48120), (p_1, 3.03), (p_2, 1)]))
+
+
+def create_ax():
+                fig, ax = plt.subplots()
+                ax.spines['top'].set_color('none')
+                ax.spines['right'].set_color('none')
+                return fig, ax
+```
+
+
+```{python}
+X = np.linspace (3000.1,3500,10000)
+
+
+fig1, ax = create_ax()
+
+
+
+ax.set(ylim=(37500, 40000))
+ax.plot(X, budsjett(48120, X, 3.03, 1), color='black', label='Opprinnelig budsjett')
+ax.plot(X, ind_k_fn(beta1,3000,med_inn/2,X,nytte_sg_num), color='grey',label='Kurve uten bompenger')
+ax.plot(x_1_eq_num, x_2_eq_num , marker='o', color='black')
+ax.annotate('A', (x_1_eq_num+10,x_2_eq_num+10))
+
+ax.vlines(x_1_eq_num, 3000, x_2_eq_num, ls='dashed', color='black')
+ax.hlines(x_2_eq_num, 3000, x_1_eq_num, ls='dashed', color='black')
+
+
+
+
+ax.set_title('Konsumentens tilpasning med fossiltdrivstoff')
+
+
+ax.legend(bbox_to_anchor=(1.5,0.6));
+```
+
+
+```{python}
+x_1_eq_num_ny = float(x_1_eq.subs([(bta_1, beta1), (gma_1, 3000), (gma_2, med_inn/2), (m, 48120), (p_1, ny_driv), (p_2, 1)]))
+x_2_eq_num_ny = float(x_2_eq.subs([(bta_2, beta2), (gma_1, 3000), (gma_2, med_inn/2), (m, 48120), (p_1, ny_driv), (p_2, 1)]))
+nytte_sg_num_ny = float(V.subs([(bta_1, beta1),(bta_2, beta2), (gma_1, 3000), (gma_2, med_inn/2), (m, 48120), (p_1, ny_driv), (p_2, 1)]))
+```
+
+
+```{python}
+ax.plot(X, budsjett(med_inn, X, ny_driv, 1), color='green', label='Nytt budsjett')
+ax.plot(X, ind_k_fn(beta1,3000,med_inn/2,X,nytte_sg_num_ny), color='lightgreen', label='Kurve med bompenger')
+ax.vlines(x_1_eq_num_ny, 3000, x_2_eq_num_ny, ls='dashed', color='black')
+ax.hlines(x_2_eq_num_ny, 3000, x_1_eq_num_ny, ls='dashed', color='black')
+ax.annotate('B', (x_1_eq_num_ny+10,x_2_eq_num_ny+10))
+
+
+ax.plot(x_1_eq_num_ny, x_2_eq_num_ny , marker='o', color='green')
+
+ax.legend(bbox_to_anchor=(1.5,0.6));
+fig1   
+```
+Her kan vi se konsumentens tilpasning med og uten bompengeavgift.
+Vi kan observere inntektseffekten ved at den nye budsjettlinjen har flyttet seg nedover fra den opprinnelige. 
+Inntektseffekten oppstår ved at prisen på kjøring økter og gir dermed konsumenten lavere kjøpekraft.
+Substutisjonseffekten oppstår fordi prisen på andre goder har blitt relativt biligere det gjør at punkt B flytter seg til venstre fordi konsumenten ønsker å kjøre mindre når prisen går opp. 
+
+
+```{python}
+el_pris = el*km_k
+beta_el = el_pris/med_inn
+beta_el2 = 1-beta_el
+gamma_el1 = 3000
+gamma_el2 = med_inn/2
+
+
+x_1_el = gma_1 + (bta_1/p_1)*(m-p_1*gma_1-p_2*gma_2)
+
+x_2_el = gma_2 + (bta_2/p_2)*(m-p_1*gma_1-p_2*gma_2)
+```
+
+
+```{python}
+x_1_eq_num_el = float(x_1_el.subs([(bta_1, beta_el), (gma_1, gamma_el1), (gma_2, gamma_el2), (m, med_inn), (p_1, el), (p_2, 1)]))
+x_2_eq_num_el = float(x_2_el.subs([(bta_2, beta_el2), (gma_1, gamma_el1), (gma_2, gamma_el2), (m, med_inn), (p_1, el), (p_2, 1)]))
+nytte_sg_num_el = float(V.subs([(bta_1, beta_el),(bta_2, beta_el2), (gma_1, gamma_el1), (gma_2, gamma_el2), (m, med_inn), (p_1, el), (p_2, 1)]))
+
+```
+
+
+```{python}
+X_el = np.linspace (3000,3500,10000)
+
+
+fig1, ax = create_ax()
+ax.set(ylim=(40000, 42500))
+
+
+
+ax.plot(X, budsjett(med_inn, X_el, el, 1), color='black', label='Opprinnelig budsjett')
+ax.plot(X, ind_k_fn(beta_el,gamma_el1,gamma_el2,X_el,nytte_sg_num_el), color='grey',label='Kurve uten bompenger')
+ax.plot(x_1_eq_num_el, x_2_eq_num_el , marker='o', color='black')
+
+ax.vlines(x_1_eq_num_el, 3000, x_2_eq_num_el, ls='dashed', color='black')
+ax.hlines(x_2_eq_num_el, 3000, x_1_eq_num_el, ls='dashed', color='black')
+ax.annotate('A', (x_1_eq_num_el+10,x_2_eq_num_el+10))
+
+
+
+
+ax.set_title('Konsumentens tilpasning med elbier')
+
+
+ax.legend(bbox_to_anchor=(1.5,0.6));
+```
+Her ser vi konsumentenstilpasning med elbiler
+
+
+
+```{python}
+el_bom = gjen_bom/el_pris
+ny_el = el + el_bom
+
+x_1_eq_num_el2 = float(x_1_el.subs([(bta_1, beta_el), (gma_1, gamma_el1), (gma_2, gamma_el2), (m, med_inn), (p_1, ny_el), (p_2, 1)]))
+x_2_eq_num_el2 = float(x_2_el.subs([(bta_2, beta_el2), (gma_1, gamma_el1), (gma_2, gamma_el2), (m, med_inn), (p_1,ny_el), (p_2, 1)]))
+nytte_sg_num_el2 = float(V.subs([(bta_1, beta_el),(bta_2, beta_el2), (gma_1, gamma_el1), (gma_2, gamma_el2), (m, med_inn), (p_1, ny_el), (p_2, 1)]))
+
+```
+
+
+```{python}
+ax.plot(X, budsjett(med_inn, X_el, ny_el, 1), color='green', label='Nytt budsjett')
+ax.plot(X, ind_k_fn(beta_el,gamma_el1, gamma_el2,X_el,nytte_sg_num_el2), color='lightgreen', label='Kurve med bompenger')
+
+ax.vlines(x_1_eq_num_el2, 3000, x_2_eq_num_el2, ls='dashed', color='black')
+ax.hlines(x_2_eq_num_el2, 3000, x_1_eq_num_el2, ls='dashed', color='black')
+ax.annotate('B', (x_1_eq_num_el2+10,x_2_eq_num_el2+10))
+
+
+ax.plot(x_1_eq_num_el2, x_2_eq_num_el2 , marker='o', color='green')
+
+ax.legend(bbox_to_anchor=(1.5,0.6));
+fig1
+```
+I likhet med tilpasningen til den forrige figuren, ser vi at kjøpekraften og prisen på kjøring og er redusert i denne figuren. Vi kan også se at konsumenten vil kjøre mer og har høyere forbruk med elbil.
+
+
+
+Vi kan se at på både elbiler og drivstoffdrevne biler at bompengeavgiften har en negativ effekt på kjøpekraften til konsumenten. Det ser ikke ut til å påvirke kjøring i veldig stor grad. 
+
+
+
+
+Innføringen av bompengeavgift har ført til en nedgang i trafikkmengden i Tromsø. Det er mulig at folk flest er veldig bevisste på kjøring nå i starten av innføringen og med kun 5 måneder med data er det ikke sikkert hvordan trafikkbildet kommer til å utvikle seg. Økningen i antall påstigninger kan også være et resultat av bompengeavigiften.
+
+
+Kilder :
+Mye av koden brukt på oppgave 3 er hentet fra forelesningsnotatene til emnet, spesielt da forelesning 14.
+
+https://www.ssb.no/transport-og-reiseliv/landtransport/statistikk/kjorelengder
+
+https://www.ssb.no/statbank/table/12852/
+
+https://www.vegvesen.no/trafikkdata/start/eksport?datatype=DAY&from=2022-01-01&lat=69.6705027947713&lon=19.009837812984863&to=2023-06-01&trafficType=vehicle&zoom=11#trpids=01057V1109432%2C02636V1125920%2C03836V1125958%2C05293V1125916%2C05899V1109722%2C13980V1126353%2C14843V1125937%2C31157V2782679%2C31958V1125796%2C34219V1109528%2C46453V1109708%2C47285V3050559%2C49212V1126027%2C52043V1664653%2C52576V1126026%2C55092V1125799%2C62639V2268190%2C68511V2673383%2C71291V1125935%2C74530V2378328%2C79743V1125914%2C80998V1125915%2C82998V1125914%2C85147V1201967
+
+https://tenktromso.no/dette-er-bypakke-tenk-tromso
+
+https://snl.no/bompenger
+
+https://www.nordlys.no/bompenge-snittet-okte-i-mars-de-viktigste-tallene-gar-ned/s/5-34-1776123
